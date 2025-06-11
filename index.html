@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Categorías Online</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .letter-display {
+            font-size: 4em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls {
+            margin: 30px 0;
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .game-form {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .category-group {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .category-group label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .category-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .category-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .timer {
+            font-size: 2em;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .result-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item strong {
+            color: #333;
+        }
+
+        .score {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #27ae60;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .instructions {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .stats {
+            background: #f1f3f4;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 1s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .letter-display {
+                font-size: 3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎮 Juego de Categorías Online</h1>
+        
+        <div class="instructions">
+            <h3>📝 Instrucciones:</h3>
+            <ul>
+                <li>Presiona "Nueva Letra" para comenzar</li>
+                <li>Completa cada categoría con una palabra que empiece con la letra mostrada</li>
+                <li>Tienes 125 segundos (2 minutos y 5 segundos) para completar todas las categorías</li>
+                <li>¡Ganas 100 puntos por cada respuesta válida!</li>
+                <li>Máximo posible: 900 puntos por ronda</li>
+                <li>Ve tu historial de rondas y puntuaciones</li>
+            </ul>
+        </div>
+
+        <div class="letter-display" id="letterDisplay">
+            Presiona "Nueva Letra" para comenzar
+        </div>
+
+        <div class="timer" id="timer">125</div>
+
+        <div class="stats" id="stats">
+            <h3 style="color: #333; margin-bottom: 10px;">📈 Estadísticas</h3>
+            <div id="roundsInfo" style="color: #666;"></div>
+        </div>
+
+        <div class="controls">
+            <button onclick="startGame()">🎲 Nueva Letra</button>
+            <button onclick="submitAnswers()" id="submitBtn" style="display: none;">✅ Enviar Respuestas</button>
+            <button onclick="resetGame()">🔄 Reiniciar</button>
+        </div>
+
+        <form class="game-form" id="gameForm">
+            <div class="category-group">
+                <label for="nombre">👤 Nombre:</label>
+                <input type="text" id="nombre" placeholder="Ejemplo: Ana, Carlos, María...">
+            </div>
+            
+            <div class="category-group">
+                <label for="apellido">👥 Apellido:</label>
+                <input type="text" id="apellido" placeholder="Ejemplo: García, López, Martínez...">
+            </div>
+            
+            <div class="category-group">
+                <label for="animal">🐾 Animal:</label>
+                <input type="text" id="animal" placeholder="Ejemplo: Águila, Caballo, Mono...">
+            </div>
+            
+            <div class="category-group">
+                <label for="cosa">🏠 Cosa/Objeto:</label>
+                <input type="text" id="cosa" placeholder="Ejemplo: Automóvil, Casa, Mesa...">
+            </div>
+            
+            <div class="category-group">
+                <label for="fruta">🍎 Fruta:</label>
+                <input type="text" id="fruta" placeholder="Ejemplo: Manzana, Banana, Cereza...">
+            </div>
+            
+            <div class="category-group">
+                <label for="pais">🌍 País:</label>
+                <input type="text" id="pais" placeholder="Ejemplo: Argentina, Brasil, México...">
+            </div>
+            
+            <div class="category-group">
+                <label for="color">🎨 Color:</label>
+                <input type="text" id="color" placeholder="Ejemplo: Azul, Rojo, Verde...">
+            </div>
+            
+            <div class="category-group">
+                <label for="marca">🏷️ Marca:</label>
+                <input type="text" id="marca" placeholder="Ejemplo: Apple, Nike, Coca-Cola...">
+            </div>
+            
+            <div class="category-group">
+                <label for="almacen">🏪 Almacén/Tienda:</label>
+                <input type="text" id="almacen" placeholder="Ejemplo: Walmart, Target, Amazon...">
+            </div>
+        </form>
+
+        <div class="results" id="results"></div>
+
+        <div class="footer">
+            <p>🌐 Juego online - Compartible por URL</p>
+            <p>Hecho con ❤️ para diversión familiar</p>
+        </div>
+    </div>
+
+    <script>
+        let currentLetter = '';
+        let gameTimer = null;
+        let timeLeft = 125;
+        let gameActive = false;
+        let roundsPlayed = 0;
+        let roundScores = [];
+
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        
+        // Cargar estadísticas guardadas
+        function loadStats() {
+            const saved = localStorage.getItem('gameStats');
+            if (saved) {
+                const data = JSON.parse(saved);
+                roundsPlayed = data.roundsPlayed || 0;
+                roundScores = data.roundScores || [];
+                updateStats();
+            }
+        }
+
+        // Guardar estadísticas
+        function saveStats() {
+            localStorage.setItem('gameStats', JSON.stringify({
+                roundsPlayed,
+                roundScores
+            }));
+        }
+
+        function getRandomLetter() {
+            return letters[Math.floor(Math.random() * letters.length)];
+        }
+
+        function startGame() {
+            currentLetter = getRandomLetter();
+            document.getElementById('letterDisplay').textContent = currentLetter;
+            document.getElementById('letterDisplay').classList.add('pulse');
+            
+            setTimeout(() => {
+                document.getElementById('letterDisplay').classList.remove('pulse');
+            }, 1000);
+
+            document.getElementById('gameForm').style.display = 'block';
+            document.getElementById('timer').style.display = 'block';
+            document.getElementById('submitBtn').style.display = 'inline-block';
+            document.getElementById('results').style.display = 'none';
+
+            // Limpiar campos
+            const inputs = document.querySelectorAll('#gameForm input');
+            inputs.forEach(input => input.value = '');
+
+            // Iniciar timer
+            timeLeft = 125;
+            gameActive = true;
+            updateTimer();
+            startTimer();
+
+            // Focus en el primer input
+            document.getElementById('nombre').focus();
+        }
+
+        function startTimer() {
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+                
+                if (timeLeft <= 0) {
+                    submitAnswers();
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const timerElement = document.getElementById('timer');
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 10) {
+                timerElement.style.color = '#e74c3c';
+                timerElement.style.fontSize = '2.5em';
+            } else if (timeLeft <= 30) {
+                timerElement.style.color = '#f39c12';
+                timerElement.style.fontSize = '2.2em';
+            } else {
+                timerElement.style.color = '#27ae60';
+                timerElement.style.fontSize = '2em';
+            }
+        }
+
+        function submitAnswers() {
+            if (!gameActive) return;
+            
+            gameActive = false;
+            clearInterval(gameTimer);
+            
+            document.getElementById('timer').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('gameForm').style.display = 'none';
+
+            const answers = {
+                nombre: document.getElementById('nombre').value.trim(),
+                apellido: document.getElementById('apellido').value.trim(),
+                animal: document.getElementById('animal').value.trim(),
+                cosa: document.getElementById('cosa').value.trim(),
+                fruta: document.getElementById('fruta').value.trim(),
+                pais: document.getElementById('pais').value.trim(),
+                color: document.getElementById('color').value.trim(),
+                marca: document.getElementById('marca').value.trim(),
+                almacen: document.getElementById('almacen').value.trim()
+            };
+
+            showResults(answers);
+        }
+
+        function validateAnswer(answer, category) {
+            if (!answer || answer.trim().length < 2) {
+                return { valid: false, reason: 'Muy corto (mínimo 2 letras)' };
+            }
+
+            const cleanAnswer = answer.trim();
+            const firstLetter = cleanAnswer.charAt(0).toUpperCase();
+            
+            if (firstLetter !== currentLetter) {
+                return { valid: false, reason: `Debe empezar con "${currentLetter}"` };
+            }
+
+            // Verificar que no sea solo la letra repetida
+            const isOnlyRepeatedLetter = /^(.)\1*$/.test(cleanAnswer.toUpperCase());
+            if (isOnlyRepeatedLetter) {
+                return { valid: false, reason: 'No puede ser solo letras repetidas' };
+            }
+
+            // Verificar que tenga al menos una vocal o consonante válida
+            const hasValidStructure = /[aeiouáéíóúAEIOUÁÉÍÓÚ]/.test(cleanAnswer) || 
+                                    /[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ].*[aeiouáéíóúAEIOUÁÉÍÓÚ]/.test(cleanAnswer);
+            
+            if (!hasValidStructure && cleanAnswer.length < 3) {
+                return { valid: false, reason: 'Palabra no válida' };
+            }
+
+            // Verificaciones específicas por categoría
+            switch(category) {
+                case 'nombre':
+                case 'apellido':
+                    // Verificar que parezca un nombre real (primera letra mayúscula)
+                    if (!/^[A-ZÁÉÍÓÚ][a-záéíóúñ]+$/.test(cleanAnswer)) {
+                        return { valid: false, reason: 'Debe ser un nombre válido' };
+                    }
+                    break;
+                    
+                case 'color':
+                    // Lista básica de colores válidos para verificación
+                    const colores = ['azul', 'rojo', 'verde', 'amarillo', 'negro', 'blanco', 'rosa', 'violeta', 'naranja', 'marrón', 'gris', 'celeste', 'turquesa', 'fucsia', 'beige', 'dorado', 'plateado', 'coral', 'salmón', 'índigo', 'magenta', 'cian', 'lima', 'oliva', 'aqua', 'carmesí', 'escarlata'];
+                    const colorValido = colores.some(color => 
+                        color.toLowerCase().startsWith(currentLetter.toLowerCase()) && 
+                        cleanAnswer.toLowerCase().includes(color.toLowerCase().substring(0, Math.min(3, color.length)))
+                    );
+                    // Si no está en la lista básica, verificar estructura básica
+                    if (!colorValido && cleanAnswer.length < 3) {
+                        return { valid: false, reason: 'Debe ser un color válido' };
+                    }
+                    break;
+                    
+                case 'animal':
+                    // Verificar longitud mínima para animales
+                    if (cleanAnswer.length < 3 && !['ox', 'oso'].includes(cleanAnswer.toLowerCase())) {
+                        return { valid: false, reason: 'Debe ser un animal válido' };
+                    }
+                    break;
+                    
+                case 'fruta':
+                    // Verificcar longitud mínima para frutas
+                    if (cleanAnswer.length < 3 && !['uva', 'higo'].includes(cleanAnswer.toLowerCase())) {
+                        return { valid: false, reason: 'Debe ser una fruta válida' };
+                    }
+                    break;
+                    
+                case 'pais':
+                    // Los nombres de países deben empezar con mayúscula
+                    if (!/^[A-ZÁÉÍÓÚ]/.test(cleanAnswer)) {
+                        return { valid: false, reason: 'Nombre de país debe empezar con mayúscula' };
+                    }
+                    if (cleanAnswer.length < 3) {
+                        return { valid: false, reason: 'Debe ser un país válido' };
+                    }
+                    break;
+            }
+
+            return { valid: true, reason: '' };
+        }
+
+        function showResults(answers) {
+            const categories = {
+                nombre: '👤 Nombre',
+                apellido: '👥 Apellido',
+                animal: '🐾 Animal',
+                cosa: '🏠 Cosa/Objeto',
+                fruta: '🍎 Fruta',
+                pais: '🌍 País',
+                color: '🎨 Color',
+                marca: '🏷️ Marca',
+                almacen: '🏪 Almacén/Tienda'
+            };
+
+            let resultsHTML = '<h2>📊 Resultados</h2>';
+            let score = 0;
+
+            for (let category in answers) {
+                const answer = answers[category];
+                const validation = validateAnswer(answer, category);
+                
+                if (validation.valid) score += 100;
+
+                resultsHTML += `
+                    <div class="result-item">
+                        <strong>${categories[category]}:</strong> 
+                        ${answer || 'Sin respuesta'} 
+                        ${validation.valid ? '✅ (+100 pts)' : '❌ (0 pts)'}
+                        ${!validation.valid && answer ? `<br><small style="color: #e74c3c;">${validation.reason}</small>` : ''}
+                    </div>
+                `;
+            }
+
+            // Actualizar estadísticas
+            roundsPlayed++;
+            roundScores.push({
+                round: roundsPlayed,
+                letter: currentLetter,
+                score: score,
+                totalPossible: 900,
+                date: new Date().toLocaleDateString()
+            });
+
+            // Guardar en localStorage
+            saveStats();
+
+            resultsHTML += `<div class="score">🏆 Puntuación de esta ronda: ${score}/900 puntos</div>`;
+
+            document.getElementById('results').innerHTML = resultsHTML;
+            document.getElementById('results').style.display = 'block';
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            const statsElement = document.getElementById('stats');
+            const roundsInfoElement = document.getElementById('roundsInfo');
+            
+            if (roundsPlayed > 0) {
+                const totalScore = roundScores.reduce((sum, round) => sum + round.score, 0);
+                const averageScore = (totalScore / roundsPlayed).toFixed(1);
+                const bestScore = Math.max(...roundScores.map(round => round.score));
+                const bestRound = roundScores.find(round => round.score === bestScore);
+                
+                let historyHTML = `
+                    <div style="margin-bottom: 15px;">
+                        <strong>🎯 Rondas jugadas:</strong> ${roundsPlayed}<br>
+                        <strong>📊 Puntuación total:</strong> ${totalScore} puntos<br>
+                        <strong>📈 Promedio:</strong> ${averageScore} puntos por ronda<br>
+                        <strong>🏅 Mejor ronda:</strong> ${bestScore} puntos (Letra ${bestRound.letter})
+                    </div>
+                    <div style="max-height: 150px; overflow-y: auto; border-top: 1px solid #ddd; padding-top: 10px;">
+                        <strong>📝 Historial de rondas:</strong><br>
+                `;
+                
+                roundScores.slice().reverse().forEach((round, index) => {
+                    const isRecent = index < 3;
+                    historyHTML += `
+                        <div style="margin: 5px 0; padding: 8px; background: ${isRecent ? '#e8f5e8' : '#f8f9fa'}; border-radius: 5px; font-size: 0.9em;">
+                            <strong>Ronda ${round.round}</strong> - Letra: <strong>${round.letter}</strong> - 
+                            <span style="color: ${round.score >= 600 ? '#27ae60' : round.score >= 300 ? '#f39c12' : '#e74c3c'};">
+                                ${round.score}/${round.totalPossible} puntos
+                            </span>
+                            ${round.date ? `<br><small>📅 ${round.date}</small>` : ''}
+                        </div>
+                    `;
+                });
+                
+                historyHTML += `</div>`;
+                roundsInfoElement.innerHTML = historyHTML;
+                statsElement.style.display = 'block';
+            }
+        }
+
+        function resetGame() {
+            if (confirm('¿Estás seguro de que quieres reiniciar el juego? Se perderá todo el historial de rondas.')) {
+                gameActive = false;
+                clearInterval(gameTimer);
+                roundsPlayed = 0;
+                roundScores = [];
+                
+                // Limpiar localStorage
+                localStorage.removeItem('gameStats');
+                
+                document.getElementById('letterDisplay').textContent = 'Presiona "Nueva Letra" para comenzar';
+                document.getElementById('gameForm').style.display = 'none';
+                document.getElementById('timer').style.display = 'none';
+                document.getElementById('submitBtn').style.display = 'none';
+                document.getElementById('results').style.display = 'none';
+                document.getElementById('stats').style.display = 'none';
+
+                const inputs = document.querySelectorAll('#gameForm input');
+                inputs.forEach(input => input.value = '');
+            }
+        }
+
+        // Permitir envío con Enter
+        document.getElementById('gameForm').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitAnswers();
+            }
+        });
+
+        // Cargar estadísticas al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+        });
