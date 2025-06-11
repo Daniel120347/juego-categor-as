@@ -1,0 +1,255 @@
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            display: none;
+            text-align: left;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .results h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .result-item.correct {
+            border-left: 4px solid #27ae60;
+        }
+
+        .result-item.incorrect {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .score {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .letter-display {
+                font-size: 3em;
+                width: 100px;
+                height: 100px;
+            }
+            
+            .game-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Juego de Categorías</h1>
+        
+        <div id="letterDisplay" class="letter-display" style="display: none;"></div>
+        
+        <div id="timer" class="timer"></div>
+        
+        <button onclick="startGame()" class="btn">🚀 Comenzar Juego</button>
+        
+        <div id="gameForm" class="game-form">
+            <div class="input-group">
+                <label for="nombre">👤 Nombre:</label>
+                <input type="text" id="nombre" placeholder="Ej: Ana">
+            </div>
+            <div class="input-group">
+                <label for="apellido">👨‍👩‍👧‍👦 Apellido:</label>
+                <input type="text" id="apellido" placeholder="Ej: García">
+            </div>
+            <div class="input-group">
+                <label for="pais">🌍 País:</label>
+                <input type="text" id="pais" placeholder="Ej: Argentina">
+            </div>
+            <div class="input-group">
+                <label for="ciudad">🏙️ Ciudad:</label>
+                <input type="text" id="ciudad" placeholder="Ej: Buenos Aires">
+            </div>
+            <div class="input-group">
+                <label for="animal">🐱 Animal:</label>
+                <input type="text" id="animal" placeholder="Ej: Gato">
+            </div>
+            <div class="input-group">
+                <label for="color">🎨 Color:</label>
+                <input type="text" id="color" placeholder="Ej: Azul">
+            </div>
+            <div class="input-group">
+                <label for="comida">🍎 Comida:</label>
+                <input type="text" id="comida" placeholder="Ej: Manzana">
+            </div>
+            <div class="input-group">
+                <label for="objeto">📱 Objeto:</label>
+                <input type="text" id="objeto" placeholder="Ej: Teléfono">
+            </div>
+        </div>
+        
+        <button id="submitBtn" onclick="submitAnswers()" class="btn" style="display: none;">
+            ✅ Enviar Respuestas
+        </button>
+        
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V'];
+        let currentLetter = '';
+        let timeLeft = 125;
+        let gameActive = false;
+        let gameTimer;
+
+        const categories = [
+            { id: 'nombre', name: '👤 Nombre', icon: '👤' },
+            { id: 'apellido', name: '👨‍👩‍👧‍👦 Apellido', icon: '👨‍👩‍👧‍👦' },
+            { id: 'pais', name: '🌍 País', icon: '🌍' },
+            { id: 'ciudad', name: '🏙️ Ciudad', icon: '🏙️' },
+            { id: 'animal', name: '🐱 Animal', icon: '🐱' },
+            { id: 'color', name: '🎨 Color', icon: '🎨' },
+            { id: 'comida', name: '🍎 Comida', icon: '🍎' },
+            { id: 'objeto', name: '📱 Objeto', icon: '📱' }
+        ];
+
+        function getRandomLetter() {
+            return letters[Math.floor(Math.random() * letters.length)];
+        }
+
+        function startGame() {
+            currentLetter = getRandomLetter();
+            document.getElementById('letterDisplay').textContent = currentLetter;
+            document.getElementById('letterDisplay').style.display = 'flex';
+            document.getElementById('letterDisplay').classList.add('pulse');
+            
+            setTimeout(() => {
+                document.getElementById('letterDisplay').classList.remove('pulse');
+            }, 1000);
+
+            document.getElementById('gameForm').style.display = 'grid';
+            document.getElementById('timer').style.display = 'block';
+            document.getElementById('submitBtn').style.display = 'inline-block';
+            document.getElementById('results').style.display = 'none';
+            
+            // Limpiar campos
+            const inputs = document.querySelectorAll('#gameForm input');
+            inputs.forEach(input => input.value = '');
+            
+            // Iniciar timer
+            timeLeft = 125;
+            gameActive = true;
+            updateTimer();
+            startTimer();
+            
+            // Focus en el primer input
+            document.getElementById('nombre').focus();
+        }
+
+        function startTimer() {
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+                
+                if (timeLeft <= 0) {
+                    submitAnswers();
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const timerElement = document.getElementById('timer');
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `⏰ Tiempo restante: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 30) {
+                timerElement.style.color = '#e74c3c';
+                timerElement.style.animation = 'pulse 1s infinite';
+            }
+        }
+
+        function submitAnswers() {
+            if (!gameActive) return;
+            
+            gameActive = false;
+            clearInterval(gameTimer);
+            
+            document.getElementById('gameForm').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('timer').style.display = 'none';
+            
+            const results = document.getElementById('results');
+            results.style.display = 'block';
+            
+            let correctAnswers = 0;
+            let resultsHTML = '<h3>📊 Resultados</h3>';
+            
+            categories.forEach(category => {
+                const input = document.getElementById(category.id);
+                const answer = input.value.trim();
+                // Validar que tenga al menos 2 caracteres y empiece con la letra correcta
+                const isCorrect = answer && 
+                                answer.length >= 2 && 
+                                answer.toLowerCase().startsWith(currentLetter.toLowerCase()) &&
+                                answer.toLowerCase() !== currentLetter.toLowerCase();
+                
+                if (isCorrect) correctAnswers++;
+                
+                resultsHTML += `
+                    <div class="result-item ${isCorrect ? 'correct' : 'incorrect'}">
+                        <span><strong>${category.name}:</strong> ${answer || 'Sin respuesta'}</span>
+                        <span>${isCorrect ? '✅' : '❌'}</span>
+                    </div>
+                `;
+            });
+            
+            const score = Math.round((correctAnswers / categories.length) * 100);
+            resultsHTML += `<div class="score">🏆 Puntuación: ${correctAnswers}/${categories.length} (${score}%)</div>`;
+            
+            results.innerHTML = resultsHTML;
+        }
+
+        // Permitir envío con Enter
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && gameActive) {
+                submitAnswers();
+            }
+        });
+
+        // Navegación con Tab entre inputs
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab' && gameActive) {
+                e.preventDefault();
+                const inputs = Array.from(document.querySelectorAll('#gameForm input'));
+                const currentIndex = inputs.findIndex(input => input === document.activeElement);
+                const nextIndex = (currentIndex + 1) % inputs.length;
+                inputs[nextIndex].focus();
+            }
+        });
+    </script>
+</body>
+</html>
